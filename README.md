@@ -9,6 +9,9 @@
 ### Description
 A net 64x64 RGB LED matrix is mounted on a wall at child-height. Each LED can be individually controlled by a user, who can light/dim a given LED using several different colors.
 
+## User Stories
+* Designer should be able to...
+
 ## Specifications
 
 ### 1. Inputs
