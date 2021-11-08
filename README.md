@@ -65,4 +65,4 @@ A net 64x64 RGB LED matrix is mounted on a wall at child-height. Each LED can be
 
 ## Diagrams
 ### Block Diagram
-![](https://i.imgur.com/xCllZdY.png)
+<img src="https://i.imgur.com/xCllZdY.png" alt="Picture This block diagram" width="600">
