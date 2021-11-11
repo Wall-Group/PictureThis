@@ -82,4 +82,4 @@ A net 64x64 RGB LED matrix is mounted on the wall at roughly child-height (TBD).
 
 ## Diagrams
 ### Block Diagram
-![](https://i.imgur.com/ryA6fUi.png)
+<img src="https://i.imgur.com/ryA6fUi.png" width=500>
