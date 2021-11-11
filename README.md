@@ -22,7 +22,7 @@ A net 64x64 RGB LED matrix is mounted on a wall at child-height. Each LED can be
 * Designer can see which LED is selected
     * Reason: The designer needs to know which LED they are currently drawing on or setting the color for
 
-* Designed can erase the entire display at once
+* Designer can erase the entire display at once
     * Reason: Turning off each LED individually is tedious. An instant clean start is desirable in some scenarios
 
 
