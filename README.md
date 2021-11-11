@@ -40,8 +40,8 @@ A net 64x64 RGB LED matrix is mounted on a wall at child-height. Each LED can be
 - Physical joystick input [x1]
     - Used to select LED
     - 4 GPIO pins, 1 power pin
-- Buttons [x9]
-    - 8 colors (WRGBYCOP), 1 reset button
+- Buttons [x10]
+    - 8 colors (WRGBYCOP), 1 reset button, 1 cursor size
     - 9 pins
 - Toggle Switch [x1]
     - Individual module power
@@ -65,4 +65,4 @@ A net 64x64 RGB LED matrix is mounted on a wall at child-height. Each LED can be
 
 ## Diagrams
 ### Block Diagram
-<img src="https://i.imgur.com/xCllZdY.png" alt="Picture This block diagram" width="600">
+![](https://i.imgur.com/ryA6fUi.png)
