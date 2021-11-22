@@ -2,7 +2,6 @@
 
 ## Table of Contents
 1. [Overview](#Overview)
-2. [Instructions](#Instructions)
 3. [UserStories](#User)
 4. [Specifications](#Specifications)
 5. [Diagrams](#Diagrams)
@@ -13,7 +12,7 @@ A net 64x64 RGB LED matrix is mounted on the wall at roughly child-height (TBD).
 
 <br>
 
-## Instructions
+### Instructions
 
 1. Use the joystick to move the pen.
 2. Set the color with one of the 8 available color buttons.
