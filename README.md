@@ -10,8 +10,6 @@
 ### Description
 A net 64x64 RGB LED matrix is mounted on the wall at roughly child-height (TBD). LEDs can be lit or dimmed using a cursor controlled by a joystick. The cursor can cycle between three sizes depending on user preference. Eight different colors can be chosen for each led (including off). A user can turn off all LEDs on the board using a single button.
 
-<br>
-
 ### Instructions
 
 1. Use the joystick to move the pen.
