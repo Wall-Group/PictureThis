@@ -2,6 +2,7 @@
 
 ## Table of Contents
 1. [Overview](#Overview)
+2. [Instructions](#Instructions)
 3. [UserStories](#User)
 4. [Specifications](#Specifications)
 5. [Diagrams](#Diagrams)
@@ -10,12 +11,17 @@
 ### Description
 A net 64x64 RGB LED matrix is mounted on the wall at roughly child-height (TBD). LEDs can be lit or dimmed using a cursor controlled by a joystick. The cursor can cycle between three sizes depending on user preference. Eight different colors can be chosen for each led (including off). A user can turn off all LEDs on the board using a single button.
 
-### Instructions
+<br>
+
+## Instructions
 
 1. Use the joystick to move the pen.
 2. Set the color with one of the 8 available color buttons.
 3. Change the pen size with the pen button.
 4. Clear the screen with the reset button.
+5. Start or stop drawing with the draw button
+    - If the cursor is dim and blinking, drawing is off
+    - If the cursor is bright and solid, drawing is on
 
 ## UserStories
 ### Required User Stories
@@ -61,6 +67,9 @@ A net 64x64 RGB LED matrix is mounted on the wall at roughly child-height (TBD).
 
 #### Cursor size button [x1]
 - Cycles between 3 available cursor sizes
+
+#### Draw button [x1]
+- Toggles drawing on or off
 
 <br>
 
