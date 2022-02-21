@@ -1,17 +1,17 @@
 #include "joystick.h"
 
-joystick_move_UP() {
-    Serial.write("Up");
+void joystick_move_UP() {
+    printf("Up");
 }
 
-joystick_move_DOWN() {
-    Serial.write("Down");
+void joystick_move_DOWN() {
+    printf("Down");
 }
 
-joystick_move_LEFT() {
-    Serial.write("Left");
+void joystick_move_LEFT() {
+    printf("Left");
 }
 
-joystick_move_RIGHT() {
-    Serial.write("Right")
+void joystick_move_RIGHT() {
+    printf("Right");
 }
