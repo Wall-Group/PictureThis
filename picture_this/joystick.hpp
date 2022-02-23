@@ -1,7 +1,12 @@
+#ifndef _JOYSTICK_H_
+#define _JOYSTICK_H_
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include "Arduino.h"
+
+namespace joystick {
 
 #define JOYSTICK_UP 41
 #define JOYSTICK_DOWN 40
@@ -12,7 +17,9 @@
     Connect the other terminal in parralel 
     to ground and the necessary pin */
 
-void joystick_move_UP();
-void joystick_move_DOWN();
-void joystick_move_LEFT();
-void joystick_move_RIGHT();
+void Init();
+
+void PollJoystick();
+
+}  // namespace joystick
+#endif  // _JOYSTICK_H_
