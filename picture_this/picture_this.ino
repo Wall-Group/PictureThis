@@ -54,6 +54,9 @@ const struct rgb24 kClear = {0x00, 0x00, 0x00};
 // Holds the cursor size
 // TODO: Figure out how to store cursor size
 
+// Holds the cursor position
+// TODO: Figure out how to store cursor position
+
 // Whether or not the user is currently drawing
 bool drawing = false;
 
@@ -243,16 +246,16 @@ void loop() {
     /*           Joystick Polling         */
     /**************************************/
     if (stick_up.update() && stick_up.fallingEdge()) {
-        // TODO: Move cursor up
+        // TODO: Move cursor up. Draw if drawing
     }
     else if (stick_dn.update() && stick_dn.fallingEdge()) {
-        // TODO: Move cursor down
+        // TODO: Move cursor down. Draw if drawing
     }
     else if (stick_lt.update() && stick_lt.fallingEdge()) {
-        // TODO: Move cursor left
+        // TODO: Move cursor left. Draw if drawing
     }
     else if (stick_rt.update() && stick_rt.fallingEdge()) {
-        // TODO: Move cursor right
+        // TODO: Move cursor right. Draw if drawing
     }
 
 }
