@@ -154,7 +154,7 @@ const int kBottomMatrix = 2;
 /// \remarks Constant formatted output. Guarded by preprocessor symbol
 void Debug(std::string msg) {
 #ifdef DEBUG
-    Serial.printf(("\033[31m[DEBUG]:\033[0m " + msg).c_str());
+    Serial.printf(("\033[34m[DEBUG]:\033[0m " + msg).c_str());
 #endif
 }
 
