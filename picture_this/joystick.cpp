@@ -1,5 +1,5 @@
 #include "joystick.hpp"
-#include <Bounce.h>
+#include <Bounce2.h>
 
 const int joystickUP_pin = 9;
 const int joystickDOWN_pin = 10;
