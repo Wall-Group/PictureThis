@@ -30,6 +30,10 @@ SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, CO
 /*****************************************************************************/
 /*                      CUSTOM GLOBALS FOR PICTURE THIS                      */
 /*****************************************************************************/
+
+/**************************************/
+/*               Colors               */
+/**************************************/
 // Holds the color being drawn. Initialized to no value / black / clear
 struct rgb24 current_color = {0x00, 0x00, 0x00};
 
@@ -43,13 +47,28 @@ const struct rgb24 kOrange = {0xff, 0xA5, 0x00};
 const struct rgb24 kPurple = {0x80, 0x00, 0x80};
 const struct rgb24 kClear = {0x00, 0x00, 0x00};
 
+
+/**************************************/
+/*            Drawing State           */
+/**************************************/
 // Holds the cursor size
 // TODO: Figure out how to store cursor size
 
+// Whether or not the user is currently drawing
+bool drawing = false;
+
+
+/**************************************/
+/*            Matrix Settings         */
+/**************************************/
 // Screen brightness. Change kPercent to change brightness
 const int kPercent = 50;  // 50 = 50%, 25 = 25%, etc.
 const int kBrightness = (kPercent * 255) / 100;  // <-- Don't change this
 
+
+/**************************************/
+/*             Bounce Setup           */
+/**************************************/
 // Const values to use for milliseconds argument to Bounce() object constructor
 const int kBounceBtn   = 50;  // For buttons
 const int kBounceStick = 50;  // For joystick
@@ -97,6 +116,10 @@ Bounce stick_dn = Bounce(kStickDnPin, kBounceStick);
 Bounce stick_lt = Bounce(kStickLtPin, kBounceStick);
 Bounce stick_rt = Bounce(kStickRtPin, kBounceStick);
 
+
+/**************************************/
+/*           Relay Settings           */
+/**************************************/
 // The I2C address of the Qwiic relay
 const int kRelayAddr = 0x6D;
 
@@ -175,6 +198,41 @@ void loop() {
     /**************************************/
     /*            Button Polling          */
     /**************************************/
+    if (btn_white.update() && btn_white.fallingEdge()) {
+        current_color = kWhite;
+    }
+    else if (btn_red.update() && btn_red.fallingEdge()) {
+        current_color = kRed;
+    }
+    else if (btn_green.update() && btn_green.fallingEdge()) {
+        current_color = kGreen;
+    }
+    else if (btn_blue.update() && btn_blue.fallingEdge()) {
+        current_color = kBlue;
+    }
+    else if (btn_yellow.update() && btn_yellow.fallingEdge()) {
+        current_color = kYellow;
+    }
+    else if (btn_orange.update() && btn_orange.fallingEdge()) {
+        current_color = kOrange;
+    }
+    else if (btn_purple.update() && btn_purple.fallingEdge()) {
+        current_color = kPurple;
+    }
+    else if (btn_erase.update() && btn_erase.fallingEdge()) {
+        current_color = kClear;
+    }
 
+    if (btn_draw.update() && btn_draw.fallingEdge()) {
+        drawing = !drawing;
+    }
+    
+    if (btn_reset.update() && btn_reset.fallingEdge()) {
+        // TODO: Reset the matrix
+    }
+
+    if (btn_cursor.update() && btn_cursor.fallingEdge()) {
+        // TODO: Update cursor
+    }
 
 }
