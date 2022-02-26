@@ -35,6 +35,16 @@ SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, CO
 // Holds the color being drawn. Initialized to no value / black / clear
 struct rgb24 current_color = {0x00, 0x00, 0x00};
 
+// Used to update current_color
+const struct rgb24 kWhite = {0xff, 0xff, 0xff};
+const struct rgb24 kRed = {0xff, 0x00, 0x00};
+const struct rgb24 kGreen = {0x00, 0xff, 0x00};
+const struct rgb24 kBlue = {0x00, 0x00, 0xff};
+const struct rgb24 kYellow = {0xff, 0xff, 0x00};
+const struct rgb24 kOrange = {0xff, 0xA5, 0x00};
+const struct rgb24 kPurple = {0x80, 0x00, 0x80};
+const struct rgb24 kClear = {0x00, 0x00, 0x00};
+
 // Holds the cursor size
 // TODO: Figure out how to store cursor size
 
@@ -112,70 +122,6 @@ void Debug(std::string msg) {
 #ifdef DEBUG
     Serial.printf(("\033[31m[DEBUG]:\033[0m " + msg).c_str());
 #endif
-}
-
-/// \brief Set current_color to white
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorWhite() {
-    current_color.red = 0xff;
-    current_color.green = 0xff;
-    current_color.blue = 0xff;
-}
-
-/// \brief Set current_color to red
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorRed() {
-    current_color.red = 0xff;
-    current_color.green = 0x00;
-    current_color.blue = 0x00;
-}
-
-/// \brief Set current_color to green
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorGreen() {
-    current_color.red = 0x00;
-    current_color.green = 0xff;
-    current_color.blue = 0x00;
-}
-
-/// \brief Set current_color to blue
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorBlue() {
-    current_color.red = 0x00;
-    current_color.green = 0x00;
-    current_color.blue = 0xff;
-}
-
-/// \brief Set current_color to purple
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorPurple() {
-    current_color.red = 0x80;
-    current_color.green = 0x00;
-    current_color.blue = 0x80;
-}
-
-/// \brief Set current_color to yellow
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorYellow() {
-    current_color.red = 0xff;
-    current_color.green = 0xff;
-    current_color.blue = 0x00;
-}
-
-/// \brief Set current_color to orange
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorOrange() {
-    current_color.red = 0xff;
-    current_color.green = 0xA5;
-    current_color.blue = 0x00;
-}
-
-/// \brief Set current_color to clear
-/// \remarks Triggered by an interrupt. Must be non-reentrant
-void SetColorClear() {
-    current_color.red = 0x00;
-    current_color.green = 0x00;
-    current_color.blue = 0x00;
 }
 
 
