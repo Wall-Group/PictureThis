@@ -20,12 +20,10 @@ const uint8_t kDmaBufferRows = 4;       // known working: 2-4, use 2 to save mem
 const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;   // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
 const uint32_t kMatrixOptions = (SMARTMATRIX_OPTIONS_NONE);      // see http://docs.pixelmatix.com/SmartMatrix for options
 const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
-const uint8_t kScrollingLayerOptions = (SM_SCROLLING_OPTIONS_NONE);
 const uint8_t kIndexedLayerOptions = (SM_INDEXED_OPTIONS_NONE);
 
 SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
 SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
-SMARTMATRIX_ALLOCATE_SCROLLING_LAYER(scrollingLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kScrollingLayerOptions);
 SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kIndexedLayerOptions);
 
 
@@ -154,10 +152,10 @@ void setup()
         relay.turnRelayOn(kBottomMatrix);
     }
 
-    matrix.addLayer(&backgroundLayer); 
-    matrix.addLayer(&scrollingLayer); 
-    matrix.addLayer(&indexedLayer); 
+    matrix.addLayer(&backgroundLayer);
+    matrix.addLayer(&indexedLayer);
     matrix.begin();
+    matrix.setBrightness(kBrightness);
 }
 
 
@@ -165,4 +163,18 @@ void setup()
 /*****************************************************************************/
 /*                                  LOOP                                     */
 /*****************************************************************************/
-void loop() {}
+void loop() {
+
+    /**************************************/
+    /*          Matrix Stuff Here         */
+    /**************************************/
+
+
+
+
+    /**************************************/
+    /*            Button Polling          */
+    /**************************************/
+
+
+}
