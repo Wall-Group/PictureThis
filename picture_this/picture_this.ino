@@ -38,42 +38,68 @@ struct rgb24 current_color = {0x00, 0x00, 0x00};
 // Holds the cursor size
 // TODO: Figure out how to store cursor size
 
+// Screen brightness. Change kPercent to change brightness
+const int kPercent = 50;  // 50 = 50%, 25 = 25%, etc.
+const int kBrightness = (kPercent * 255) / 100;  // <-- Don't change this
+
 // Const values to use for milliseconds argument to Bounce() object constructor
-const int BOUNCE_BTN = 50;  // For buttons
-const int BOUNCE_JYSTK = 50;  // For joystick
+const int kBounceBtn   = 50;  // For buttons
+const int kBounceStick = 50;  // For joystick
 
-// Bounce objects for each button.
-// TODO: Setup pins for each button
-Bounce btn_white  = Bounce(0, BOUNCE_BTN);
-Bounce btn_red    = Bounce(0, BOUNCE_BTN);
-Bounce btn_green  = Bounce(0, BOUNCE_BTN);
-Bounce btn_blue   = Bounce(0, BOUNCE_BTN);
-Bounce btn_yellow = Bounce(0, BOUNCE_BTN);
-Bounce btn_orange = Bounce(0, BOUNCE_BTN);
-Bounce btn_purple = Bounce(0, BOUNCE_BTN);
+// Const values to use for color button pins
+const int kWhitePin  = 0;  // TODO: Select pins
+const int kRedPin    = 0;
+const int kGreenPin  = 0;
+const int kBluePin   = 0;
+const int kYellowPin = 0;
+const int kOrangePin = 0;
+const int kPurplePin = 0;
+const int kErasePin  = 0;
 
-Bounce btn_erase  = Bounce(0, BOUNCE_BTN);
-Bounce btn_draw   = Bounce(0, BOUNCE_BTN);
-Bounce btn_reset  = Bounce(0, BOUNCE_BTN);
-Bounce btn_cursor = Bounce(0, BOUNCE_BTN);
+// Const values to use for functionality button pins
+const int kDrawPin   = 0;  // TODO: Select pins
+const int kResetPin  = 0;
+const int kCursorPin = 0;
+
+// Const values to use for joystick pins
+const int kStickUpPin = 0;  // TODO: Select pins
+const int kStickDnPin = 0;
+const int kStickLtPin = 0;
+const int kStickRtPin = 0;
+
+// Bounce objects for color buttons
+Bounce btn_white  = Bounce(kWhitePin,  kBounceBtn);
+Bounce btn_red    = Bounce(kRedPin,    kBounceBtn);
+Bounce btn_green  = Bounce(kGreenPin,  kBounceBtn);
+Bounce btn_blue   = Bounce(kBluePin,   kBounceBtn);
+Bounce btn_yellow = Bounce(kYellowPin, kBounceBtn);
+Bounce btn_orange = Bounce(kOrangePin, kBounceBtn);
+Bounce btn_purple = Bounce(kPurplePin, kBounceBtn);
+Bounce btn_erase  = Bounce(kErasePin,  kBounceBtn);
+
+// TODO: Select pins to use
+// Bounce objects for module functionality
+Bounce btn_draw   = Bounce(kDrawPin,   kBounceBtn);
+Bounce btn_reset  = Bounce(kResetPin,  kBounceBtn);
+Bounce btn_cursor = Bounce(kCursorPin, kBounceBtn);
 
 // Bounce objects for the joystick
-Bounce jystk_up = Bounce(0, BOUNCE_JYSTK);
-Bounce jystk_dn = Bounce(0, BOUNCE_JYSTK);
-Bounce jystk_lt = Bounce(0, BOUNCE_JYSTK);
-Bounce jystk_rt = Bounce(0, BOUNCE_JYSTK);
+Bounce stick_up = Bounce(kStickUpPin, kBounceStick);
+Bounce stick_dn = Bounce(kStickDnPin, kBounceStick);
+Bounce stick_lt = Bounce(kStickLtPin, kBounceStick);
+Bounce stick_rt = Bounce(kStickRtPin, kBounceStick);
 
 // The I2C address of the Qwiic relay
 const int kRelayAddr = 0x6D;
+
+// Used to command the Qwiic relay via I2C
+Qwiic_Relay relay(kRelayAddr);
 
 // The relay used to supply power to the top matrix
 const int kTopMatrix = 1;
 
 // The relay used to supply power to the bottom matrix
 const int kBottomMatrix = 2;
-
-// Used to command the Qwiic relay via I2C
-Qwiic_Relay relay(kRelayAddr);
 
 
 
@@ -161,6 +187,16 @@ void setup()
     // Start the serial monitor first. Don't do anything till it's up.
     Serial.begin(57600);
     while(!Serial);
+
+    // Set Bounce object pins to INPUT_PULLUP, as suggested by the library
+    pinMode(kWhitePin,  INPUT_PULLUP);
+    pinMode(kRedPin,    INPUT_PULLUP);
+    pinMode(kGreenPin,  INPUT_PULLUP);
+    pinMode(kBluePin,   INPUT_PULLUP);
+    pinMode(kYellowPin, INPUT_PULLUP);
+    pinMode(kOrangePin, INPUT_PULLUP);
+    pinMode(kPurplePin, INPUT_PULLUP);
+    pinMode(kErasePin,  INPUT_PULLUP);
 
     // Initialize I2C communication and Qwiic relay object
     Wire.begin();
