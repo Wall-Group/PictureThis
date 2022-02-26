@@ -233,7 +233,11 @@ void loop() {
     }
     
     if (btn_reset.update() && btn_reset.fallingEdge()) {
-        // TODO: Reset the matrix
+        backgroundLayer.fillScreen(kClear);
+        backgroundLayer.swapBuffers();
+        drawing = false;
+        // TODO: Re-center cursor and update cursor position variable
+        // TODO: Reset cursor size and update cursor size variable
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
