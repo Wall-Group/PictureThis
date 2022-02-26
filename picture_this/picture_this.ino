@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <MatrixHardware_Teensy4_ShieldV5.h>
 #include <SmartMatrix.h>
+#include <Bounce.h>
 #include "SparkFun_Qwiic_Relay.h"
 
 #include <string>
@@ -36,6 +37,31 @@ struct rgb24 current_color = {0x00, 0x00, 0x00};
 
 // Holds the cursor size
 // TODO: Figure out how to store cursor size
+
+// Const values to use for milliseconds argument to Bounce() object constructor
+const int BOUNCE_BTN = 50;  // For buttons
+const int BOUNCE_JYSTK = 50;  // For joystick
+
+// Bounce objects for each button.
+// TODO: Setup pins for each button
+Bounce btn_white  = Bounce(0, BOUNCE_BTN);
+Bounce btn_red    = Bounce(0, BOUNCE_BTN);
+Bounce btn_green  = Bounce(0, BOUNCE_BTN);
+Bounce btn_blue   = Bounce(0, BOUNCE_BTN);
+Bounce btn_yellow = Bounce(0, BOUNCE_BTN);
+Bounce btn_orange = Bounce(0, BOUNCE_BTN);
+Bounce btn_purple = Bounce(0, BOUNCE_BTN);
+
+Bounce btn_erase  = Bounce(0, BOUNCE_BTN);
+Bounce btn_draw   = Bounce(0, BOUNCE_BTN);
+Bounce btn_reset  = Bounce(0, BOUNCE_BTN);
+Bounce btn_cursor = Bounce(0, BOUNCE_BTN);
+
+// Bounce objects for the joystick
+Bounce jystk_up = Bounce(0, BOUNCE_JYSTK);
+Bounce jystk_dn = Bounce(0, BOUNCE_JYSTK);
+Bounce jystk_lt = Bounce(0, BOUNCE_JYSTK);
+Bounce jystk_rt = Bounce(0, BOUNCE_JYSTK);
 
 // The I2C address of the Qwiic relay
 const int kRelayAddr = 0x6D;
