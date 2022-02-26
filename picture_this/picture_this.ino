@@ -51,14 +51,22 @@ const struct rgb24 kClear = {0x00, 0x00, 0x00};
 /**************************************/
 /*            Drawing State           */
 /**************************************/
-// Holds the cursor size
-// TODO: Figure out how to store cursor size
+// Center values for cursor
+const int kCenterX = 32;
+const int kCenterY = 32;
 
-// Holds the cursor position
-// TODO: Figure out how to store cursor position
+// Holds the cursor size
+struct {
+    int x = kCenterX;  // X position of center
+    int y = kCenterY;  // Y position of center
+    int r = 1;  // Radius of cursor
+} cursor;
 
 // Whether or not the user is currently drawing
 bool drawing = false;
+
+// True if cursor currently drawn. Used to blink when not drawing
+bool blink = false;
 
 
 /**************************************/
@@ -192,14 +200,7 @@ void setup()
 /*                                  LOOP                                     */
 /*****************************************************************************/
 void loop() {
-
-    /**************************************/
-    /*          Matrix Stuff Here         */
-    /**************************************/
-
-
-
-
+    
     /**************************************/
     /*            Button Polling          */
     /**************************************/
@@ -235,13 +236,15 @@ void loop() {
     if (btn_reset.update() && btn_reset.fallingEdge()) {
         backgroundLayer.fillScreen(kClear);
         backgroundLayer.swapBuffers();
+
         drawing = false;
-        // TODO: Re-center cursor and update cursor position variable
-        // TODO: Reset cursor size and update cursor size variable
+        cursor.r = 1;
+        cursor.x = kCenterX;
+        cursor.y = kCenterY;
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
-        // TODO: Update cursor
+        cursor.r = (cursor.r % 3) + 1;  // Allow radii 1,2,3
     }
 
 
@@ -249,17 +252,46 @@ void loop() {
     /**************************************/
     /*           Joystick Polling         */
     /**************************************/
+    bool moved = false;
     if (stick_up.update() && stick_up.fallingEdge()) {
-        // TODO: Move cursor up. Draw if drawing
+        cursor.y += 1;
+        moved = true;
+        if (cursor.y > 63) cursor.y = 0;  // wrap around
     }
     else if (stick_dn.update() && stick_dn.fallingEdge()) {
-        // TODO: Move cursor down. Draw if drawing
+        cursor.y -= 1;
+        moved = true;
+        if (cursor.y < 0) cursor.y = 63;  // wrap around
     }
     else if (stick_lt.update() && stick_lt.fallingEdge()) {
-        // TODO: Move cursor left. Draw if drawing
+        cursor.x -= 1;
+        moved = true;
+        if (cursor.x < 0) cursor.x = 63;  // wrap around
     }
     else if (stick_rt.update() && stick_rt.fallingEdge()) {
-        // TODO: Move cursor right. Draw if drawing
+        cursor.x += 1;
+        moved = true;
+        if (cursor.x > 63) cursor.x = 0;  // wrap around
+    }
+
+
+    /**************************************/
+    /*               Drawing              */
+    /**************************************/
+    if (moved && drawing) {
+        backgroundLayer.fillCircle(
+                    cursor.x, cursor.y, cursor.r, current_color);
+    }
+
+    // If not drawing, blink cursor
+    if (!drawing) {
+        struct rgb24 blink_color;
+        if (blink) blink_color = kClear;
+        else blink_color = current_color;
+
+        backgroundLayer.fillCircle(
+                cursor.x, cursor.y, cursor.r, blink_color);
+        blink = !blink;
     }
 
 }
