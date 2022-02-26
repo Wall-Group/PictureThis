@@ -73,6 +73,9 @@ const int kBrightness = (kPercent * 255) / 100;  // <-- Don't change this
 const int kBounceBtn   = 50;  // For buttons
 const int kBounceStick = 50;  // For joystick
 
+// How fast to move the cursor, in ms, when the joystick is held in a direction
+// const int kDrawSpeed = 500; // Disallow for now...
+
 // Const values to use for color button pins
 const int kWhitePin  = 0;  // TODO: Select pins
 const int kRedPin    = 0;
@@ -104,7 +107,6 @@ Bounce btn_orange = Bounce(kOrangePin, kBounceBtn);
 Bounce btn_purple = Bounce(kPurplePin, kBounceBtn);
 Bounce btn_erase  = Bounce(kErasePin,  kBounceBtn);
 
-// TODO: Select pins to use
 // Bounce objects for module functionality
 Bounce btn_draw   = Bounce(kDrawPin,   kBounceBtn);
 Bounce btn_reset  = Bounce(kResetPin,  kBounceBtn);
@@ -233,6 +235,24 @@ void loop() {
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
         // TODO: Update cursor
+    }
+
+
+
+    /**************************************/
+    /*           Joystick Polling         */
+    /**************************************/
+    if (stick_up.update() && stick_up.fallingEdge()) {
+        // TODO: Move cursor up
+    }
+    else if (stick_dn.update() && stick_dn.fallingEdge()) {
+        // TODO: Move cursor down
+    }
+    else if (stick_lt.update() && stick_lt.fallingEdge()) {
+        // TODO: Move cursor left
+    }
+    else if (stick_rt.update() && stick_rt.fallingEdge()) {
+        // TODO: Move cursor right
     }
 
 }
