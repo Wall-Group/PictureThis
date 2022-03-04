@@ -88,25 +88,25 @@ const int kBounceStick = 50;  // For joystick
 // const int kDrawSpeed = 500; // Disallow for now...
 
 // Const values to use for color button pins
-const int kWhitePin  = 0;  // TODO: Select pins
-const int kRedPin    = 0;
-const int kGreenPin  = 0;
-const int kBluePin   = 0;
-const int kYellowPin = 0;
-const int kOrangePin = 0;
-const int kPurplePin = 0;
-const int kErasePin  = 0;
+const int kWhitePin  = 24;  // TODO: Select pins
+const int kRedPin    = 25;
+const int kGreenPin  = 26;
+const int kBluePin   = 27;
+const int kYellowPin = 28;
+const int kOrangePin = 29;
+const int kPurplePin = 30;
+const int kErasePin  = 31;
 
 // Const values to use for functionality button pins
-const int kDrawPin   = 0;  // TODO: Select pins
-const int kResetPin  = 0;
-const int kCursorPin = 0;
+const int kDrawPin   = 32;  // TODO: Select pins
+const int kResetPin  = 33;
+const int kCursorPin = 34;
 
 // Const values to use for joystick pins
-const int kStickUpPin = 0;  // TODO: Select pins
-const int kStickDnPin = 0;
-const int kStickLtPin = 0;
-const int kStickRtPin = 0;
+const int kStickUpPin = 38;  // TODO: Select pins
+const int kStickDnPin = 39;
+const int kStickLtPin = 40;
+const int kStickRtPin = 41;
 
 // Bounce objects for color buttons
 Bounce btn_white  = Bounce(kWhitePin,  kBounceBtn);
@@ -154,7 +154,7 @@ const int kBottomMatrix = 2;
 /// \remarks Constant formatted output. Guarded by preprocessor symbol
 void Debug(std::string msg) {
 #ifdef DEBUG
-    Serial.printf(("\033[34m[DEBUG]:\033[0m " + msg).c_str());
+    Serial.printf(("[DEBUG]: " + msg + "\n").c_str());
 #endif
 }
 
@@ -177,6 +177,17 @@ void setup()
     pinMode(kOrangePin, INPUT_PULLUP);
     pinMode(kPurplePin, INPUT_PULLUP);
     pinMode(kErasePin,  INPUT_PULLUP);
+
+    // Set Bounce object pins to INPUT_PULLUP for joystick
+    pinMode(kStickUpPin, INPUT_PULLUP);
+    pinMode(kStickDnPin, INPUT_PULLUP);
+    pinMode(kStickLtPin, INPUT_PULLUP);
+    pinMode(kStickRtPin, INPUT_PULLUP);
+
+    // Set Bounce object pints to INPUT_PULLUP for other buttons
+    pinMode(kDrawPin, INPUT_PULLUP);
+    pinMode(kResetPin, INPUT_PULLUP);
+    pinMode(kCursorPin, INPUT_PULLUP);
 
     // Initialize I2C communication and Qwiic relay object
     Wire.begin();
@@ -241,10 +252,13 @@ void loop() {
         cursor.r = 1;
         cursor.x = kCenterX;
         cursor.y = kCenterY;
+
+        Debug("Resetting board");
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
         cursor.r = (cursor.r % 3) + 1;  // Allow radii 1,2,3
+        Serial.printf("[DEBUG]: New cursor size: %d\n", cursor.r);
     }
 
 
@@ -254,21 +268,28 @@ void loop() {
     /**************************************/
     bool moved = false;
     if (stick_up.update() && stick_up.fallingEdge()) {
+        Debug("Joystick up");
         cursor.y += 1;
         moved = true;
         if (cursor.y > 63) cursor.y = 0;  // wrap around
     }
-    else if (stick_dn.update() && stick_dn.fallingEdge()) {
+
+    if (stick_dn.update() && stick_dn.fallingEdge()) {
+        Debug("Joystick down");
         cursor.y -= 1;
         moved = true;
         if (cursor.y < 0) cursor.y = 63;  // wrap around
     }
-    else if (stick_lt.update() && stick_lt.fallingEdge()) {
+    
+    if (stick_lt.update() && stick_lt.fallingEdge()) {
+        Debug("Joystick left");
         cursor.x -= 1;
         moved = true;
         if (cursor.x < 0) cursor.x = 63;  // wrap around
     }
-    else if (stick_rt.update() && stick_rt.fallingEdge()) {
+    
+    if (stick_rt.update() && stick_rt.fallingEdge()) {
+        Debug("Joystick right");
         cursor.x += 1;
         moved = true;
         if (cursor.x > 63) cursor.x = 0;  // wrap around
@@ -281,6 +302,7 @@ void loop() {
     if (moved && drawing) {
         backgroundLayer.fillCircle(
                     cursor.x, cursor.y, cursor.r, current_color);
+        Debug("Drawing");
     }
 
     // If not drawing, blink cursor
