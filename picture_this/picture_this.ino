@@ -13,8 +13,8 @@
 /*      THIS CODE COPIED FROM SMART MATRIX LIBRARY FOR INITIALIZATION        */
 /*****************************************************************************/
 #define COLOR_DEPTH 24                  // known working: 24, 48 - If the sketch uses type `rgb24` directly, COLOR_DEPTH must be 24
-const uint16_t kMatrixWidth = 32;        // known working: 32, 64, 96, 128
-const uint16_t kMatrixHeight = 32;       // known working: 16, 32, 48, 64
+const uint16_t kMatrixWidth = 64;        // known working: 32, 64, 96, 128
+const uint16_t kMatrixHeight = 64;       // known working: 16, 32, 48, 64
 const uint8_t kRefreshDepth = 36;       // known working: 24, 36, 48
 const uint8_t kDmaBufferRows = 4;       // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
 const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;   // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
@@ -34,9 +34,6 @@ SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, CO
 /**************************************/
 /*               Colors               */
 /**************************************/
-// Holds the color being drawn. Initialized to no value / black / clear
-struct rgb24 current_color = {0x00, 0x00, 0x00};
-
 // Used to update current_color
 const struct rgb24 kWhite = {0xff, 0xff, 0xff};
 const struct rgb24 kRed = {0xff, 0x00, 0x00};
@@ -46,6 +43,9 @@ const struct rgb24 kYellow = {0xff, 0xff, 0x00};
 const struct rgb24 kOrange = {0xff, 0xA5, 0x00};
 const struct rgb24 kPurple = {0x80, 0x00, 0x80};
 const struct rgb24 kClear = {0x00, 0x00, 0x00};
+
+// Holds the color being drawn. Initialized to no value / black / clear
+struct rgb24 current_color = kGreen;
 
 
 /**************************************/
@@ -60,6 +60,9 @@ struct {
     int x = kCenterX;  // X position of center
     int y = kCenterY;  // Y position of center
     int r = 1;  // Radius of cursor
+    int px = kCenterX;
+    int py = kCenterY;
+    int pr = r;
 } cursor;
 
 // Whether or not the user is currently drawing
@@ -164,9 +167,7 @@ void Debug(std::string msg) {
 /*****************************************************************************/
 void setup()
 {
-    // Start the serial monitor first. Don't do anything till it's up.
-    Serial.begin(57600);
-    while(!Serial);
+    Wire.begin();
 
     // Set Bounce object pins to INPUT_PULLUP, as suggested by the library
     pinMode(kWhitePin,  INPUT_PULLUP);
@@ -190,7 +191,6 @@ void setup()
     pinMode(kCursorPin, INPUT_PULLUP);
 
     // Initialize I2C communication and Qwiic relay object
-    Wire.begin();
     if (!relay.begin()) {
         Debug("Couldn't establish I2C connection with Qwiic relay");
     } else {
@@ -249,6 +249,11 @@ void loop() {
         backgroundLayer.swapBuffers();
 
         drawing = false;
+
+        cursor.pr = cursor.r;
+        cursor.px = cursor.x;
+        cursor.py = cursor.y;
+
         cursor.r = 1;
         cursor.x = kCenterX;
         cursor.y = kCenterY;
@@ -257,6 +262,7 @@ void loop() {
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
+        cursor.pr = cursor.r;
         cursor.r = (cursor.r % 3) + 1;  // Allow radii 1,2,3
         Serial.printf("[DEBUG]: New cursor size: %d\n", cursor.r);
     }
@@ -269,6 +275,7 @@ void loop() {
     bool moved = false;
     if (stick_up.update() && stick_up.fallingEdge()) {
         Debug("Joystick up");
+        cursor.py = cursor.y;
         cursor.y += 1;
         moved = true;
         if (cursor.y > 63) cursor.y = 0;  // wrap around
@@ -276,6 +283,7 @@ void loop() {
 
     if (stick_dn.update() && stick_dn.fallingEdge()) {
         Debug("Joystick down");
+        cursor.py = cursor.y;
         cursor.y -= 1;
         moved = true;
         if (cursor.y < 0) cursor.y = 63;  // wrap around
@@ -283,6 +291,7 @@ void loop() {
     
     if (stick_lt.update() && stick_lt.fallingEdge()) {
         Debug("Joystick left");
+        cursor.px = cursor.x;
         cursor.x -= 1;
         moved = true;
         if (cursor.x < 0) cursor.x = 63;  // wrap around
@@ -290,6 +299,7 @@ void loop() {
     
     if (stick_rt.update() && stick_rt.fallingEdge()) {
         Debug("Joystick right");
+        cursor.px = cursor.x;
         cursor.x += 1;
         moved = true;
         if (cursor.x > 63) cursor.x = 0;  // wrap around
@@ -302,7 +312,13 @@ void loop() {
     if (moved && drawing) {
         backgroundLayer.fillCircle(
                     cursor.x, cursor.y, cursor.r, current_color);
+        backgroundLayer.swapBuffers();
         Debug("Drawing");
+    }
+    else if (moved && !drawing) {
+        backgroundLayer.fillCircle(
+            cursor.px, cursor.py, cursor.pr, kClear);
+            backgroundLayer.swapBuffers();
     }
 
     // If not drawing, blink cursor
@@ -313,7 +329,8 @@ void loop() {
 
         backgroundLayer.fillCircle(
                 cursor.x, cursor.y, cursor.r, blink_color);
+        backgroundLayer.swapBuffers();
         blink = !blink;
     }
-
+    delay(100);
 }
