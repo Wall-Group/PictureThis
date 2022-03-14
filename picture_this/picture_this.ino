@@ -2,6 +2,7 @@
 #include <MatrixHardware_Teensy4_ShieldV5.h>
 #include <SmartMatrix.h>
 #include <Bounce.h>
+#include <arduino-timer.h>
 #include "SparkFun_Qwiic_Relay.h"
 
 #include <string>
@@ -25,6 +26,9 @@ const uint8_t kIndexedLayerOptions = (SM_INDEXED_OPTIONS_NONE);
 SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
 SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
 SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kIndexedLayerOptions);
+
+// Blink the cursor every x
+auto timer = timer_create_default();
 
 
 /*****************************************************************************/
@@ -106,8 +110,8 @@ const int kResetPin  = 33;
 const int kCursorPin = 34;
 
 // Const values to use for joystick pins
-const int kStickUpPin = 38;  // TODO: Select pins
-const int kStickDnPin = 39;
+const int kStickUpPin = 39;  // TODO: Select pins
+const int kStickDnPin = 38;
 const int kStickLtPin = 40;
 const int kStickRtPin = 41;
 
@@ -161,6 +165,27 @@ void Debug(std::string msg) {
 #endif
 }
 
+void RecordLast() {
+    blink = false;
+    cursor.pr = cursor.r;
+    cursor.py = cursor.y;
+    cursor.px = cursor.x;
+}
+
+void Blink() {
+    // If not drawing, blink cursor
+    if (!drawing) {
+        struct rgb24 blink_color;
+        if (blink) blink_color = kClear;
+        else blink_color = current_color;
+
+        backgroundLayer.fillCircle(
+                cursor.x, cursor.y, cursor.r, blink_color);
+        backgroundLayer.swapBuffers();
+        blink = !blink;
+    }
+}
+
 
 /*****************************************************************************/
 /*                                  SETUP                                    */
@@ -203,6 +228,8 @@ void setup()
     matrix.addLayer(&indexedLayer);
     matrix.begin();
     matrix.setBrightness(kBrightness);
+
+    timer.every(250, Blink);
 }
 
 
@@ -211,6 +238,7 @@ void setup()
 /*                                  LOOP                                     */
 /*****************************************************************************/
 void loop() {
+    timer.tick();
     
     /**************************************/
     /*            Button Polling          */
@@ -250,9 +278,7 @@ void loop() {
 
         drawing = false;
 
-        cursor.pr = cursor.r;
-        cursor.px = cursor.x;
-        cursor.py = cursor.y;
+        RecordLast();
 
         cursor.r = 1;
         cursor.x = kCenterX;
@@ -262,7 +288,6 @@ void loop() {
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
-        cursor.pr = cursor.r;
         cursor.r = (cursor.r % 3) + 1;  // Allow radii 1,2,3
         Serial.printf("[DEBUG]: New cursor size: %d\n", cursor.r);
     }
@@ -275,31 +300,31 @@ void loop() {
     bool moved = false;
     if (stick_up.update() && stick_up.fallingEdge()) {
         Debug("Joystick up");
-        cursor.py = cursor.y;
+        RecordLast();
         cursor.y += 1;
         moved = true;
         if (cursor.y > 63) cursor.y = 0;  // wrap around
     }
 
-    if (stick_dn.update() && stick_dn.fallingEdge()) {
+    else if (stick_dn.update() && stick_dn.fallingEdge()) {
         Debug("Joystick down");
-        cursor.py = cursor.y;
+        RecordLast();
         cursor.y -= 1;
         moved = true;
         if (cursor.y < 0) cursor.y = 63;  // wrap around
     }
     
-    if (stick_lt.update() && stick_lt.fallingEdge()) {
+    else if (stick_lt.update() && stick_lt.fallingEdge()) {
         Debug("Joystick left");
-        cursor.px = cursor.x;
+        RecordLast();
         cursor.x -= 1;
         moved = true;
         if (cursor.x < 0) cursor.x = 63;  // wrap around
     }
     
-    if (stick_rt.update() && stick_rt.fallingEdge()) {
+    else if (stick_rt.update() && stick_rt.fallingEdge()) {
         Debug("Joystick right");
-        cursor.px = cursor.x;
+        RecordLast();
         cursor.x += 1;
         moved = true;
         if (cursor.x > 63) cursor.x = 0;  // wrap around
@@ -319,18 +344,8 @@ void loop() {
         backgroundLayer.fillCircle(
             cursor.px, cursor.py, cursor.pr, kClear);
             backgroundLayer.swapBuffers();
+        timer.cancel();
+        Blink();
+        timer.every(250, Blink);
     }
-
-    // If not drawing, blink cursor
-    if (!drawing) {
-        struct rgb24 blink_color;
-        if (blink) blink_color = kClear;
-        else blink_color = current_color;
-
-        backgroundLayer.fillCircle(
-                cursor.x, cursor.y, cursor.r, blink_color);
-        backgroundLayer.swapBuffers();
-        blink = !blink;
-    }
-    delay(100);
 }
