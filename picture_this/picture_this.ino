@@ -23,6 +23,7 @@ const uint32_t kMatrixOptions = (SMARTMATRIX_OPTIONS_NONE);      // see http://d
 const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
 const uint8_t kIndexedLayerOptions = (SM_INDEXED_OPTIONS_NONE);
 
+
 SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
 SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
 SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kIndexedLayerOptions);
@@ -80,7 +81,7 @@ bool blink = false;
 /*            Matrix Settings         */
 /**************************************/
 // Screen brightness. Change kPercent to change brightness
-const int kPercent = 50;  // 50 = 50%, 25 = 25%, etc.
+const int kPercent = 35;  // 50 = 50%, 25 = 25%, etc.
 const int kBrightness = (kPercent * 255) / 100;  // <-- Don't change this
 
 
@@ -114,6 +115,8 @@ const int kStickUpPin = 39;  // TODO: Select pins
 const int kStickDnPin = 38;
 const int kStickLtPin = 40;
 const int kStickRtPin = 41;
+
+const int kCursorLayer = 1;
 
 // Bounce objects for color buttons
 Bounce btn_white  = Bounce(kWhitePin,  kBounceBtn);
@@ -174,16 +177,51 @@ void RecordLast() {
 
 void Blink() {
     // If not drawing, blink cursor
-    if (!drawing) {
-        struct rgb24 blink_color;
-        if (blink) blink_color = kClear;
-        else blink_color = current_color;
-
-        backgroundLayer.fillCircle(
-                cursor.x, cursor.y, cursor.r, blink_color);
-        backgroundLayer.swapBuffers();
-        blink = !blink;
+    struct rgb24 blink_color;
+    if (blink) {  // Blink is on, turn off
+        indexedLayer.setIndexedColor(kCursorLayer, {0x0, 0x0, 0x0});
+        indexedLayer.fillScreen(kCursorLayer);
+        // blink_color = kClear;
     }
+    else {  // Blink is off, turn on
+        indexedLayer.setIndexedColor(kCursorLayer, current_color);
+        switch (cursor.r) {
+            case 1:
+            {
+                Serial.printf("Cursor size 1. Drawing pixel");
+                indexedLayer.drawPixel(cursor.x, cursor.y, kCursorLayer);
+                break;
+            }
+            case 2:
+            {
+                indexedLayer.drawPixel(cursor.x, cursor.y, kCursorLayer);       // Middle
+                indexedLayer.drawPixel(cursor.x - 1, cursor.y, kCursorLayer);   // Left middle
+                indexedLayer.drawPixel(cursor.x + 1, cursor.y, kCursorLayer);   // Right middle
+
+                indexedLayer.drawPixel(cursor.x, cursor.y - 1, kCursorLayer);   // Top middle
+                indexedLayer.drawPixel(cursor.x - 1, cursor.y - 1, kCursorLayer);   // Top left
+                indexedLayer.drawPixel(cursor.x + 1, cursor.y - 1, kCursorLayer);   // Top right
+
+                indexedLayer.drawPixel(cursor.x, cursor.y + 1, kCursorLayer);   // Bottom middle
+                indexedLayer.drawPixel(cursor.x - 1, cursor.y + 1, kCursorLayer);   // Bottom left
+                indexedLayer.drawPixel(cursor.x + 1, cursor.y + 1, kCursorLayer);   // Bottom right
+                break;
+            }
+            case 3:
+            {
+                break;
+            }
+            default:
+                break;
+        }
+        // blink_color = current_color;
+    }
+
+    indexedLayer.swapBuffers();
+    // backgroundLayer.fillCircle(
+    //         cursor.x, cursor.y, cursor.r, blink_color);
+    // backgroundLayer.swapBuffers();
+    blink = !blink;
 }
 
 
@@ -228,6 +266,7 @@ void setup()
     matrix.addLayer(&indexedLayer);
     matrix.begin();
     matrix.setBrightness(kBrightness);
+    backgroundLayer.enableColorCorrection(true);
 
     timer.every(250, Blink);
 }
@@ -262,6 +301,7 @@ void loop() {
         current_color = kOrange;
     }
     else if (btn_purple.update() && btn_purple.fallingEdge()) {
+        Serial.printf("Changing to purple");
         current_color = kPurple;
     }
     else if (btn_erase.update() && btn_erase.fallingEdge()) {
@@ -270,6 +310,7 @@ void loop() {
 
     if (btn_draw.update() && btn_draw.fallingEdge()) {
         drawing = !drawing;
+        Blink();
     }
     
     if (btn_reset.update() && btn_reset.fallingEdge()) {
@@ -288,7 +329,13 @@ void loop() {
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
+        cursor.pr = cursor.r;   // Record last cursor size for blinking
         cursor.r = (cursor.r % 3) + 1;  // Allow radii 1,2,3
+
+        // Erase previous cursor
+        blink = true;
+        Blink(); // Call Blink to erase previous cursor
+
         Serial.printf("[DEBUG]: New cursor size: %d\n", cursor.r);
     }
 
@@ -336,7 +383,7 @@ void loop() {
     /**************************************/
     if (moved && drawing) {
         backgroundLayer.fillCircle(
-                    cursor.x, cursor.y, cursor.r, current_color);
+                    cursor.px, cursor.py, cursor.pr, current_color);
         backgroundLayer.swapBuffers();
         Debug("Drawing");
     }
