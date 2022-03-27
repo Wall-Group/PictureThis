@@ -25,11 +25,11 @@ const uint8_t kIndexedLayerOptions = (SM_INDEXED_OPTIONS_NONE);
 
 SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
 SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
-SMARTMATRIX_ALLOCATE_INDEXED_LAYER(indexedLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kIndexedLayerOptions);
 
 // Blink the cursor every x
 auto timer = timer_create_default();
 
+struct rgb24 dots[64][64];
 
 /*****************************************************************************/
 /*                      CUSTOM GLOBALS FOR PICTURE THIS                      */
@@ -167,25 +167,176 @@ void Debug(std::string msg) {
 
 void RecordLast() {
     blink = false;
-    cursor.pr = cursor.r;
+    // cursor.pr = cursor.r;
     cursor.py = cursor.y;
     cursor.px = cursor.x;
 }
 
 void Blink() {
     // If not drawing, blink cursor
-    if (!drawing) {
-        struct rgb24 blink_color;
-        if (blink) blink_color = kClear;
-        else blink_color = current_color;
 
-        backgroundLayer.fillCircle(
-                cursor.x, cursor.y, cursor.r, blink_color);
-        backgroundLayer.swapBuffers();
-        blink = !blink;
+    struct rgb24 blink_color;
+    // if (blink) blink_color = kClear
+    struct rgb24 dot_color = dots[cursor.x][cursor.y];
+
+    if (blink && !SameColor(dot_color, current_color)) blink_color = dots[cursor.x][cursor.y];
+    else if (blink) blink_color = kClear;
+    else blink_color = current_color;
+
+    backgroundLayer.fillCircle(
+            cursor.x, cursor.y, cursor.r, blink_color);
+
+    backgroundLayer.swapBuffers();
+    blink = !blink;
+}
+
+void InitDots() {
+
+    for (int i=0; i<64; i++) {
+        for (int j=0; j<64; j++) {
+            dots[i][j] = kClear;
+        }
+    }
+
+}
+
+bool SameColor(struct rgb24 a, struct rgb24 b) {
+    bool r = a.red == b.red;
+    bool g = a.green == b.green;
+    bool bl = a.blue == b.blue;
+    return r && g && bl;
+}
+
+void SetDot(int radius, int x, int y, struct rgb24 color) {
+
+    if (radius == 1) {
+        dots[x][y] = color;
+    }
+    else if (radius == 2) {
+        dots[x - 1][y - 1] = color;
+        dots[x][y - 1] = color;
+        dots[x + 1][y - 1] = color;
+
+        dots[x-1][y] = color;
+        dots[x][y] = color;
+        dots[x+1][y] = color;
+
+        dots[x-1][y+1] = color;
+        dots[x][y+1] = color;
+        dots[x+1][y+1] = color;
+    }
+    else if (radius == 3) {
+        // Top three dots
+        dots[x-1][y-2] = color;
+        dots[x][y-2] = color;
+        dots[x+1][y-2] = color;
+
+        // 2nd row five dots
+        dots[x-2][y-1] = color;
+        dots[x - 1][y - 1] = color;
+        dots[x][y - 1] = color;
+        dots[x + 1][y - 1] = color;
+        dots[x + 2][y-1] = color;
+
+        // Middle row five dots
+        dots[x - 2][y] = color;
+        dots[x-1][y] = color;
+        dots[x][y] = color;
+        dots[x+1][y] = color;
+        dots[x+2][y] = color;
+
+        // 4th row five dots
+        dots[x-2][y+1] = color;
+        dots[x-1][y+1] = color;
+        dots[x][y+1] = color;
+        dots[x+1][y+1] = color;
+        dots[x+2][y+1] = color;
+
+        // Bottom three dots
+        dots[x-1][y+2] = color;
+        dots[x][y+2] = color;
+        dots[x+1][y+2] = color;
     }
 }
 
+
+void DrawDot(int x, int y) {
+    backgroundLayer.drawPixel(x, y, dots[x][y]);
+    backgroundLayer.swapBuffers();
+}
+
+void DrawSquare(int x, int y) {
+    // 2nd row five dots
+    backgroundLayer.drawPixel(x - 1, y - 1, dots[x-1][y-1]);
+    backgroundLayer.drawPixel(x, y - 1, dots[x][y-1]);
+    backgroundLayer.drawPixel(x + 1, y - 1, dots[x+1][y-1]);
+
+    // Middle row five dots
+    backgroundLayer.drawPixel(x-1, y, dots[x-1][y]);
+    backgroundLayer.drawPixel(x, y, dots[x][y]);
+    backgroundLayer.drawPixel(x+1, y, dots[x+1][y]);
+
+    // 4th row five dots
+    backgroundLayer.drawPixel(x-1, y+1, dots[x-1][y+1]);
+    backgroundLayer.drawPixel(x, y+1, dots[x][y+1]);
+    backgroundLayer.drawPixel(x+1, y+1, dots[x+1][y+1]);
+
+    backgroundLayer.swapBuffers();
+}
+
+void DrawCross(int x, int y) {
+     // Top three dots
+    backgroundLayer.drawPixel(x-1, y-2, dots[x-1][y-2]);
+    backgroundLayer.drawPixel(x, y-2, dots[x][y-2]);
+    backgroundLayer.drawPixel(x+1, y-2, dots[x+1][y-2]);
+
+    // 2nd row five dots
+    backgroundLayer.drawPixel(x-2, y-1, dots[x-2][y-1]);
+    backgroundLayer.drawPixel(x - 1, y - 1, dots[x-1][y-1]);
+    backgroundLayer.drawPixel(x, y - 1, dots[x][y-1]);
+    backgroundLayer.drawPixel(x + 1, y - 1, dots[x+1][y-1]);
+    backgroundLayer.drawPixel(x + 2, y-1, dots[x+2][y-1]);
+
+    // Middle row five dots
+    backgroundLayer.drawPixel(x - 2, y, dots[x-2][y]);
+    backgroundLayer.drawPixel(x-1, y, dots[x-1][y]);
+    backgroundLayer.drawPixel(x, y, dots[x][y]);
+    backgroundLayer.drawPixel(x+1, y, dots[x+1][y]);
+    backgroundLayer.drawPixel(x+2, y, dots[x+2][y]);
+
+    // 4th row five dots
+    backgroundLayer.drawPixel(x-2, y+1, dots[x-2][y+1]);
+    backgroundLayer.drawPixel(x-1, y+1, dots[x-1][y+1]);
+    backgroundLayer.drawPixel(x, y+1, dots[x][y+1]);
+    backgroundLayer.drawPixel(x+1, y+1, dots[x+1][y+1]);
+    backgroundLayer.drawPixel(x+2, y+1, dots[x+2][y+1]);
+
+    // Bottom three dots
+    backgroundLayer.drawPixel(x-1, y+2, dots[x-1][y+2]);
+    backgroundLayer.drawPixel(x, y+2, dots[x][y+2]);
+    backgroundLayer.drawPixel(x+1, y+2, dots[x+1][y+2]);
+
+    backgroundLayer.swapBuffers();
+}
+
+void ResetPrevious(bool c = false) {
+    
+    int radius = c ? cursor.pr : cursor.r;
+
+    // Use the previous radius to determine which pixels to reset
+    switch (radius) {
+        case 1:
+            DrawDot(cursor.px, cursor.py);
+            break;
+        case 2:
+            DrawSquare(cursor.px, cursor.py);
+            break;
+        case 3:
+            DrawCross(cursor.px, cursor.py);
+            break;
+    }
+
+}
 
 /*****************************************************************************/
 /*                                  SETUP                                    */
@@ -215,6 +366,8 @@ void setup()
     pinMode(kResetPin, INPUT_PULLUP);
     pinMode(kCursorPin, INPUT_PULLUP);
 
+    InitDots();
+
     // Initialize I2C communication and Qwiic relay object
     if (!relay.begin()) {
         Debug("Couldn't establish I2C connection with Qwiic relay");
@@ -225,7 +378,6 @@ void setup()
     }
 
     matrix.addLayer(&backgroundLayer);
-    matrix.addLayer(&indexedLayer);
     matrix.begin();
     matrix.setBrightness(kBrightness);
 
@@ -288,8 +440,25 @@ void loop() {
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
+        timer.cancel();
+
+        // Make sure cursor is NOT drawn before changing size
+        switch (cursor.r) {
+            case 1:
+                DrawDot(cursor.x, cursor.y);
+                break;
+            case 2:
+                DrawSquare(cursor.x, cursor.y);
+                break;
+            case 3:
+                DrawCross(cursor.x, cursor.y);
+                break;
+        }
+
+        cursor.pr = cursor.r;
         cursor.r = (cursor.r % 3) + 1;  // Allow radii 1,2,3
-        Serial.printf("[DEBUG]: New cursor size: %d\n", cursor.r);
+        ResetPrevious(true);
+        timer.every(250, Blink);
     }
 
 
@@ -335,17 +504,29 @@ void loop() {
     /*               Drawing              */
     /**************************************/
     if (moved && drawing) {
+        SetDot(cursor.r, cursor.x, cursor.y, current_color);
+        ResetPrevious();
         backgroundLayer.fillCircle(
                     cursor.x, cursor.y, cursor.r, current_color);
         backgroundLayer.swapBuffers();
-        Debug("Drawing");
     }
     else if (moved && !drawing) {
-        backgroundLayer.fillCircle(
-            cursor.px, cursor.py, cursor.pr, kClear);
-            backgroundLayer.swapBuffers();
+        // Turn Blink() off
         timer.cancel();
-        Blink();
+
+        // Reset the pixels that the cursor was on prior to moving
+        ResetPrevious();
+
+        backgroundLayer.fillCircle(cursor.x, cursor.y, cursor.r, current_color);
+
+        backgroundLayer.swapBuffers();
+
+        // Turn Blink() back on
+        // Blink();
         timer.every(250, Blink);
     }
+
+    /// Anytime we move, we want to reset all the pixels that the cursor was over
+    /// to their previous values if we're not drawing
+
 }
