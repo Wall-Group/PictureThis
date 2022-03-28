@@ -95,25 +95,25 @@ const int kBounceStick = 50;  // For joystick
 // const int kDrawSpeed = 500; // Disallow for now...
 
 // Const values to use for color button pins
-const int kWhitePin  = 24;  // TODO: Select pins
-const int kRedPin    = 25;
-const int kGreenPin  = 26;
-const int kBluePin   = 27;
-const int kYellowPin = 28;
-const int kOrangePin = 29;
-const int kPurplePin = 30;
+const int kWhitePin  = 41;  // TODO: Select pins
+const int kRedPin    = 40;
+const int kGreenPin  = 39;
+const int kBluePin   = 38;
+const int kYellowPin = 34;
+const int kOrangePin = 33;
+const int kPurplePin = 32;
 const int kErasePin  = 31;
 
 // Const values to use for functionality button pins
-const int kDrawPin   = 32;  // TODO: Select pins
-const int kResetPin  = 33;
-const int kCursorPin = 34;
+const int kDrawPin   = 30;  // TODO: Select pins
+const int kResetPin  = 29;
+const int kCursorPin = 28;
 
 // Const values to use for joystick pins
-const int kStickUpPin = 39;  // TODO: Select pins
-const int kStickDnPin = 38;
-const int kStickLtPin = 40;
-const int kStickRtPin = 41;
+const int kStickUpPin = 27;  // TODO: Select pins
+const int kStickDnPin = 26;
+const int kStickLtPin = 25;
+const int kStickRtPin = 24;
 
 // Bounce objects for color buttons
 Bounce btn_white  = Bounce(kWhitePin,  kBounceBtn);
