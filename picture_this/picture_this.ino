@@ -96,18 +96,18 @@ const int kBounceStick = 50;  // For joystick
 
 // Const values to use for color button pins
 const int kWhitePin  = 41;  // TODO: Select pins
-const int kRedPin    = 40;
+const int kBluePin   = 40;
 const int kGreenPin  = 39;
-const int kBluePin   = 38;
-const int kYellowPin = 34;
-const int kOrangePin = 33;
-const int kPurplePin = 32;
-const int kErasePin  = 31;
+const int kRedPin    = 37;
+const int kErasePin  = 36;
+const int kPurplePin = 35;
+const int kOrangePin = 34;
+const int kYellowPin = 33;
 
 // Const values to use for functionality button pins
-const int kDrawPin   = 30;  // TODO: Select pins
-const int kResetPin  = 29;
-const int kCursorPin = 28;
+const int kCursorPin = 31;
+const int kResetPin  = 30;
+const int kDrawPin   = 29;  // TODO: Select pins
 
 // Const values to use for joystick pins
 const int kStickUpPin = 27;  // TODO: Select pins
