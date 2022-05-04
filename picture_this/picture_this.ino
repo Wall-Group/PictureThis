@@ -166,6 +166,20 @@ void Debug(std::string msg) {
 #endif
 }
 
+struct rgb24 AccessDot(int x, int y) {
+  int bounded_x, bounded_y;
+  
+  if (x > 63) bounded_x = 0;
+  else if (x < 0) bounded_x = 63;
+  else bounded_x = x;
+
+  if (y > 63) bounded_y = 0;
+  else if (y < 0) bounded_y = 63;
+  else bounded_y = y;
+
+  return dots[bounded_x][bounded_y];
+}
+
 void RecordLast() {
     blink = false;
     // cursor.pr = cursor.r;
