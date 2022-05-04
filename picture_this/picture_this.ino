@@ -166,7 +166,7 @@ void Debug(std::string msg) {
 #endif
 }
 
-struct rgb24 AccessDot(int x, int y) {
+struct rgb24 AccessDots(int x, int y) {
   int bounded_x, bounded_y;
   
   if (x > 63) bounded_x = 0;
@@ -178,6 +178,20 @@ struct rgb24 AccessDot(int x, int y) {
   else bounded_y = y;
 
   return dots[bounded_x][bounded_y];
+}
+
+void SetDots(int x, int y, struct rgb24 color) {
+	int bounded_x, bounded_y;
+  
+	if (x > 63) bounded_x = 0;
+	else if (x < 0) bounded_x = 63;
+	else bounded_x = x;
+
+	if (y > 63) bounded_y = 0;
+	else if (y < 0) bounded_y = 63;
+	else bounded_y = y;
+
+	dots[bounded_x][bounded_y] = color;
 }
 
 void RecordLast() {
@@ -192,9 +206,9 @@ void Blink() {
 
     struct rgb24 blink_color;
     // if (blink) blink_color = kClear
-    struct rgb24 dot_color = dots[cursor.x][cursor.y];
+    struct rgb24 dot_color = AccessDots(cursor.x,cursor.y);
 
-    if (blink && !SameColor(dot_color, current_color)) blink_color = dots[cursor.x][cursor.y];
+    if (blink && !SameColor(dot_color, current_color)) blink_color = AccessDots(cursor.x,cursor.y);
     else if (blink && !SameColor(current_color, kClear)) blink_color = kClear;
     else if (blink) blink_color = kClearBlink;
     else blink_color = current_color;
@@ -210,7 +224,7 @@ void InitDots() {
 
     for (int i=0; i<64; i++) {
         for (int j=0; j<64; j++) {
-            dots[i][j] = kClear;
+            SetDots(i, j,  kClear);
         }
     }
 
@@ -226,111 +240,111 @@ bool SameColor(struct rgb24 a, struct rgb24 b) {
 void SetDot(int radius, int x, int y, struct rgb24 color) {
 
     if (radius == 1) {
-        dots[x][y] = color;
+        SetDots(x, y, color);
     }
     else if (radius == 2) {
-        dots[x - 1][y - 1] = color;
-        dots[x][y - 1] = color;
-        dots[x + 1][y - 1] = color;
+        SetDots(x - 1, y - 1, color);
+        SetDots(x, y - 1, color);
+        SetDots(x + 1, y - 1, color);
 
-        dots[x-1][y] = color;
-        dots[x][y] = color;
-        dots[x+1][y] = color;
+        SetDots(x-1, y, color);
+        SetDots(x, y, color);
+        SetDots(x+1, y, color);
 
-        dots[x-1][y+1] = color;
-        dots[x][y+1] = color;
-        dots[x+1][y+1] = color;
+        SetDots(x-1, y+1, color);
+        SetDots(x, y+1, color);
+        SetDots(x+1, y+1, color);
     }
     else if (radius == 3) {
         // Top three dots
-        dots[x-1][y-2] = color;
-        dots[x][y-2] = color;
-        dots[x+1][y-2] = color;
+        SetDots(x-1, y-2, color);
+        SetDots(x, y-2, color);
+        SetDots(x+1, y-2, color);
 
         // 2nd row five dots
-        dots[x-2][y-1] = color;
-        dots[x - 1][y - 1] = color;
-        dots[x][y - 1] = color;
-        dots[x + 1][y - 1] = color;
-        dots[x + 2][y-1] = color;
+        SetDots(x-2, y-1, color);
+        SetDots(x - 1, y - 1, color);
+        SetDots(x, y - 1, color);
+        SetDots(x + 1, y - 1, color);
+        SetDots(x + 2, y-1, color);
 
         // Middle row five dots
-        dots[x - 2][y] = color;
-        dots[x-1][y] = color;
-        dots[x][y] = color;
-        dots[x+1][y] = color;
-        dots[x+2][y] = color;
+        SetDots(x - 2, y, color);
+        SetDots(x-1, y, color);
+        SetDots(x, y, color);
+        SetDots(x+1, y, color);
+        SetDots(x+2, y, color);
 
         // 4th row five dots
-        dots[x-2][y+1] = color;
-        dots[x-1][y+1] = color;
-        dots[x][y+1] = color;
-        dots[x+1][y+1] = color;
-        dots[x+2][y+1] = color;
+        SetDots(x-2, y+1, color);
+        SetDots(x-1, y+1, color);
+        SetDots(x, y+1, color);
+        SetDots(x+1, y+1, color);
+        SetDots(x+2, y+1, color);
 
         // Bottom three dots
-        dots[x-1][y+2] = color;
-        dots[x][y+2] = color;
-        dots[x+1][y+2] = color;
+        SetDots(x-1, y+2, color);
+        SetDots(x, y+2, color);
+        SetDots(x+1, y+2, color);
     }
 }
 
 
 void DrawDot(int x, int y) {
-    backgroundLayer.drawPixel(x, y, dots[x][y]);
+    backgroundLayer.drawPixel(x, y, AccessDots(x,y));
     backgroundLayer.swapBuffers();
 }
 
 void DrawSquare(int x, int y) {
     // 2nd row five dots
-    backgroundLayer.drawPixel(x - 1, y - 1, dots[x-1][y-1]);
-    backgroundLayer.drawPixel(x, y - 1, dots[x][y-1]);
-    backgroundLayer.drawPixel(x + 1, y - 1, dots[x+1][y-1]);
+    backgroundLayer.drawPixel(x - 1, y - 1, AccessDots(x-1,y-1));
+    backgroundLayer.drawPixel(x, y - 1, AccessDots(x,y-1));
+    backgroundLayer.drawPixel(x + 1, y - 1, AccessDots(x+1,y-1));
 
     // Middle row five dots
-    backgroundLayer.drawPixel(x-1, y, dots[x-1][y]);
-    backgroundLayer.drawPixel(x, y, dots[x][y]);
-    backgroundLayer.drawPixel(x+1, y, dots[x+1][y]);
+    backgroundLayer.drawPixel(x-1, y, AccessDots(x-1,y));
+    backgroundLayer.drawPixel(x, y, AccessDots(x,y));
+    backgroundLayer.drawPixel(x+1, y, AccessDots(x+1,y));
 
     // 4th row five dots
-    backgroundLayer.drawPixel(x-1, y+1, dots[x-1][y+1]);
-    backgroundLayer.drawPixel(x, y+1, dots[x][y+1]);
-    backgroundLayer.drawPixel(x+1, y+1, dots[x+1][y+1]);
+    backgroundLayer.drawPixel(x-1, y+1, AccessDots(x-1,y+1));
+    backgroundLayer.drawPixel(x, y+1, AccessDots(x,y+1));
+    backgroundLayer.drawPixel(x+1, y+1, AccessDots(x+1,y+1));
 
     backgroundLayer.swapBuffers();
 }
 
 void DrawCross(int x, int y) {
      // Top three dots
-    backgroundLayer.drawPixel(x-1, y-2, dots[x-1][y-2]);
-    backgroundLayer.drawPixel(x, y-2, dots[x][y-2]);
-    backgroundLayer.drawPixel(x+1, y-2, dots[x+1][y-2]);
+    backgroundLayer.drawPixel(x-1, y-2, AccessDots(x-1,y-2));
+    backgroundLayer.drawPixel(x, y-2, AccessDots(x,y-2));
+    backgroundLayer.drawPixel(x+1, y-2, AccessDots(x+1,y-2));
 
     // 2nd row five dots
-    backgroundLayer.drawPixel(x-2, y-1, dots[x-2][y-1]);
-    backgroundLayer.drawPixel(x - 1, y - 1, dots[x-1][y-1]);
-    backgroundLayer.drawPixel(x, y - 1, dots[x][y-1]);
-    backgroundLayer.drawPixel(x + 1, y - 1, dots[x+1][y-1]);
-    backgroundLayer.drawPixel(x + 2, y-1, dots[x+2][y-1]);
+    backgroundLayer.drawPixel(x-2, y-1, AccessDots(x-2,y-1));
+    backgroundLayer.drawPixel(x - 1, y - 1, AccessDots(x-1,y-1));
+    backgroundLayer.drawPixel(x, y - 1, AccessDots(x,y-1));
+    backgroundLayer.drawPixel(x + 1, y - 1, AccessDots(x+1,y-1));
+    backgroundLayer.drawPixel(x + 2, y-1, AccessDots(x+2,y-1));
 
     // Middle row five dots
-    backgroundLayer.drawPixel(x - 2, y, dots[x-2][y]);
-    backgroundLayer.drawPixel(x-1, y, dots[x-1][y]);
-    backgroundLayer.drawPixel(x, y, dots[x][y]);
-    backgroundLayer.drawPixel(x+1, y, dots[x+1][y]);
-    backgroundLayer.drawPixel(x+2, y, dots[x+2][y]);
+    backgroundLayer.drawPixel(x - 2, y, AccessDots(x-2,y));
+    backgroundLayer.drawPixel(x-1, y, AccessDots(x-1,y));
+    backgroundLayer.drawPixel(x, y, AccessDots(x,y));
+    backgroundLayer.drawPixel(x+1, y, AccessDots(x+1,y));
+    backgroundLayer.drawPixel(x+2, y, AccessDots(x+2,y));
 
     // 4th row five dots
-    backgroundLayer.drawPixel(x-2, y+1, dots[x-2][y+1]);
-    backgroundLayer.drawPixel(x-1, y+1, dots[x-1][y+1]);
-    backgroundLayer.drawPixel(x, y+1, dots[x][y+1]);
-    backgroundLayer.drawPixel(x+1, y+1, dots[x+1][y+1]);
-    backgroundLayer.drawPixel(x+2, y+1, dots[x+2][y+1]);
+    backgroundLayer.drawPixel(x-2, y+1, AccessDots(x-2,y+1));
+    backgroundLayer.drawPixel(x-1, y+1, AccessDots(x-1,y+1));
+    backgroundLayer.drawPixel(x, y+1, AccessDots(x,y+1));
+    backgroundLayer.drawPixel(x+1, y+1, AccessDots(x+1,y+1));
+    backgroundLayer.drawPixel(x+2, y+1, AccessDots(x+2,y+1));
 
     // Bottom three dots
-    backgroundLayer.drawPixel(x-1, y+2, dots[x-1][y+2]);
-    backgroundLayer.drawPixel(x, y+2, dots[x][y+2]);
-    backgroundLayer.drawPixel(x+1, y+2, dots[x+1][y+2]);
+    backgroundLayer.drawPixel(x-1, y+2, AccessDots(x-1,y+2));
+    backgroundLayer.drawPixel(x, y+2, AccessDots(x,y+2));
+    backgroundLayer.drawPixel(x+1, y+2, AccessDots(x+1,y+2));
 
     backgroundLayer.swapBuffers();
 }
