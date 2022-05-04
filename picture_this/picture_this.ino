@@ -47,6 +47,7 @@ const struct rgb24 kYellow = {0xff, 0xff, 0x00};
 const struct rgb24 kOrange = {0xff, 0xA5, 0x00};
 const struct rgb24 kPurple = {0x80, 0x00, 0x80};
 const struct rgb24 kClear = {0x00, 0x00, 0x00};
+const struct rgb24 kClearBlink = {0x50, 0x50, 0x50};
 
 // Holds the color being drawn. Initialized to no value / black / clear
 struct rgb24 current_color = kGreen;
@@ -80,7 +81,7 @@ bool blink = false;
 /*            Matrix Settings         */
 /**************************************/
 // Screen brightness. Change kPercent to change brightness
-const int kPercent = 50;  // 50 = 50%, 25 = 25%, etc.
+const int kPercent = 40;  // 50 = 50%, 25 = 25%, etc.
 const int kBrightness = (kPercent * 255) / 100;  // <-- Don't change this
 
 
@@ -111,9 +112,9 @@ const int kDrawPin   = 29;  // TODO: Select pins
 
 // Const values to use for joystick pins
 const int kStickUpPin = 27;  // TODO: Select pins
-const int kStickDnPin = 26;
-const int kStickLtPin = 25;
-const int kStickRtPin = 24;
+const int kStickDnPin = 28;
+const int kStickLtPin = 24;
+const int kStickRtPin = 25;
 
 // Bounce objects for color buttons
 Bounce btn_white  = Bounce(kWhitePin,  kBounceBtn);
@@ -180,7 +181,8 @@ void Blink() {
     struct rgb24 dot_color = dots[cursor.x][cursor.y];
 
     if (blink && !SameColor(dot_color, current_color)) blink_color = dots[cursor.x][cursor.y];
-    else if (blink) blink_color = kClear;
+    else if (blink && !SameColor(current_color, kClear)) blink_color = kClear;
+    else if (blink) blink_color = kClearBlink;
     else blink_color = current_color;
 
     backgroundLayer.fillCircle(
@@ -368,15 +370,6 @@ void setup()
 
     InitDots();
 
-    // Initialize I2C communication and Qwiic relay object
-    if (!relay.begin()) {
-        Debug("Couldn't establish I2C connection with Qwiic relay");
-    } else {
-        Debug("Established I2C connection with Qwiic relay");
-        relay.turnRelayOn(kTopMatrix);
-        relay.turnRelayOn(kBottomMatrix);
-    }
-
     matrix.addLayer(&backgroundLayer);
     matrix.begin();
     matrix.setBrightness(kBrightness);
@@ -430,13 +423,13 @@ void loop() {
 
         drawing = false;
 
-        RecordLast();
-
         cursor.r = 1;
         cursor.x = kCenterX;
         cursor.y = kCenterY;
 
-        Debug("Resetting board");
+        RecordLast();
+        InitDots();
+
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
@@ -468,7 +461,6 @@ void loop() {
     /**************************************/
     bool moved = false;
     if (stick_up.update() && stick_up.fallingEdge()) {
-        Debug("Joystick up");
         RecordLast();
         cursor.y += 1;
         moved = true;
@@ -476,7 +468,6 @@ void loop() {
     }
 
     else if (stick_dn.update() && stick_dn.fallingEdge()) {
-        Debug("Joystick down");
         RecordLast();
         cursor.y -= 1;
         moved = true;
@@ -484,7 +475,6 @@ void loop() {
     }
     
     else if (stick_lt.update() && stick_lt.fallingEdge()) {
-        Debug("Joystick left");
         RecordLast();
         cursor.x -= 1;
         moved = true;
@@ -492,7 +482,6 @@ void loop() {
     }
     
     else if (stick_rt.update() && stick_rt.fallingEdge()) {
-        Debug("Joystick right");
         RecordLast();
         cursor.x += 1;
         moved = true;
@@ -503,11 +492,12 @@ void loop() {
     /**************************************/
     /*               Drawing              */
     /**************************************/
+    struct rgb24 draw_color = (SameColor(current_color, kClear)) ? kClearBlink : current_color;
     if (moved && drawing) {
         SetDot(cursor.r, cursor.x, cursor.y, current_color);
         ResetPrevious();
         backgroundLayer.fillCircle(
-                    cursor.x, cursor.y, cursor.r, current_color);
+                    cursor.x, cursor.y, cursor.r, draw_color);
         backgroundLayer.swapBuffers();
     }
     else if (moved && !drawing) {
@@ -517,7 +507,7 @@ void loop() {
         // Reset the pixels that the cursor was on prior to moving
         ResetPrevious();
 
-        backgroundLayer.fillCircle(cursor.x, cursor.y, cursor.r, current_color);
+        backgroundLayer.fillCircle(cursor.x, cursor.y, cursor.r, draw_color);
 
         backgroundLayer.swapBuffers();
 
