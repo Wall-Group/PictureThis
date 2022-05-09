@@ -21,13 +21,16 @@ const uint8_t kDmaBufferRows = 4;       // known working: 2-4, use 2 to save mem
 const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;   // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
 const uint32_t kMatrixOptions = (SMARTMATRIX_OPTIONS_NONE);      // see http://docs.pixelmatix.com/SmartMatrix for options
 const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
-const uint8_t kIndexedLayerOptions = (SM_INDEXED_OPTIONS_NONE);
+const uint8_t kScrollingLayerOptions = (SM_SCROLLING_OPTIONS_NONE);
 
 SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
 SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
+SMARTMATRIX_ALLOCATE_SCROLLING_LAYER(scrollingLayer1, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kScrollingLayerOptions);
+
 
 // Blink the cursor every x
 auto timer = timer_create_default();
+auto timeout = timer_create_default();
 
 struct rgb24 dots[64][64];
 
@@ -39,13 +42,13 @@ struct rgb24 dots[64][64];
 /*               Colors               */
 /**************************************/
 // Used to update current_color
-const struct rgb24 kWhite = {0xff, 0xff, 0xff};
-const struct rgb24 kRed = {0xff, 0x00, 0x00};
-const struct rgb24 kGreen = {0x00, 0xff, 0x00};
+const struct rgb24 kWhite = {0xdc, 0xdc, 0xdc};
+const struct rgb24 kRed = {0xe0, 0x10, 0x10};
+const struct rgb24 kGreen = {0x06, 0xc4, 0x0f};
 const struct rgb24 kBlue = {0x00, 0x00, 0xff};
 const struct rgb24 kYellow = {0xff, 0xff, 0x00};
-const struct rgb24 kOrange = {0xff, 0xA5, 0x00};
-const struct rgb24 kPurple = {0x80, 0x00, 0x80};
+const struct rgb24 kOrange = {0xff, 0x8F, 0x00};
+const struct rgb24 kPurple = {0x82, 0x00, 0x85};
 const struct rgb24 kClear = {0x00, 0x00, 0x00};
 const struct rgb24 kClearBlink = {0x50, 0x50, 0x50};
 
@@ -74,14 +77,14 @@ struct {
 bool drawing = false;
 
 // True if cursor currently drawn. Used to blink when not drawing
-bool blink = false;
+bool cursor_drawn = false;
 
 
 /**************************************/
 /*            Matrix Settings         */
 /**************************************/
 // Screen brightness. Change kPercent to change brightness
-const int kPercent = 40;  // 50 = 50%, 25 = 25%, etc.
+const int kPercent = 60;  // 50 = 50%, 25 = 25%, etc.
 const int kBrightness = (kPercent * 255) / 100;  // <-- Don't change this
 
 
@@ -136,6 +139,9 @@ Bounce stick_up = Bounce(kStickUpPin, kBounceStick);
 Bounce stick_dn = Bounce(kStickDnPin, kBounceStick);
 Bounce stick_lt = Bounce(kStickLtPin, kBounceStick);
 Bounce stick_rt = Bounce(kStickRtPin, kBounceStick);
+
+bool title_screen_on = true;
+int kTimeout = 300000;
 
 
 /**************************************/
@@ -195,7 +201,7 @@ void SetDots(int x, int y, struct rgb24 color) {
 }
 
 void RecordLast() {
-    blink = false;
+    cursor_drawn = false;
     // cursor.pr = cursor.r;
     cursor.py = cursor.y;
     cursor.px = cursor.x;
@@ -205,19 +211,30 @@ void Blink() {
     // If not drawing, blink cursor
 
     struct rgb24 blink_color;
-    // if (blink) blink_color = kClear
     struct rgb24 dot_color = AccessDots(cursor.x,cursor.y);
 
-    if (blink && !SameColor(dot_color, current_color)) blink_color = AccessDots(cursor.x,cursor.y);
-    else if (blink && !SameColor(current_color, kClear)) blink_color = kClear;
-    else if (blink) blink_color = kClearBlink;
-    else blink_color = current_color;
+	// If cursor drawn
+	if (cursor_drawn) {
 
-    backgroundLayer.fillCircle(
-            cursor.x, cursor.y, cursor.r, blink_color);
+		// Set the clear color based on if we're erasing or not
+		if (!SameColor(current_color, kClear)) {
+			blink_color = kClear;
+		}
+		else {
+			blink_color = kClearBlink;
+		}
+
+	}
+	// Cursor not drawn, populate with the current_color
+    else {
+		blink_color = current_color;
+	}
+
+	backgroundLayer.fillCircle(
+			cursor.x, cursor.y, cursor.r, blink_color);
 
     backgroundLayer.swapBuffers();
-    blink = !blink;
+    cursor_drawn = !cursor_drawn;
 }
 
 void InitDots() {
@@ -349,6 +366,26 @@ void DrawCross(int x, int y) {
     backgroundLayer.swapBuffers();
 }
 
+void Draw() {
+	switch (cursor.r) {
+		case 1: {
+			DrawDot(cursor.x, cursor.y);
+			break;
+		}
+		case 2: {
+			DrawSquare(cursor.x, cursor.y);
+			break;
+		}
+		case 3: {
+			DrawCross(cursor.x, cursor.y);
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+}
+
 void ResetPrevious(bool c = false) {
     
     int radius = c ? cursor.pr : cursor.r;
@@ -366,6 +403,23 @@ void ResetPrevious(bool c = false) {
             break;
     }
 
+}
+
+void ResetPushed() {
+	backgroundLayer.fillScreen(kClear);
+	backgroundLayer.swapBuffers();
+
+	drawing = false;
+
+	cursor.r = 1;
+	cursor.x = kCenterX;
+	cursor.y = kCenterY;
+
+	RecordLast();
+	InitDots();
+
+	title_screen_on = true;
+	scrollingLayer1.start("PictureThis", -1);
 }
 
 /*****************************************************************************/
@@ -399,10 +453,21 @@ void setup()
     InitDots();
 
     matrix.addLayer(&backgroundLayer);
+	matrix.addLayer(&scrollingLayer1);
     matrix.begin();
     matrix.setBrightness(kBrightness);
 
+	backgroundLayer.enableColorCorrection(true);
+
+	scrollingLayer1.setMode(wrapForward);
+	scrollingLayer1.setColor(kBlue);
+	scrollingLayer1.setSpeed(10);
+	scrollingLayer1.setFont(gohufont11);
+	scrollingLayer1.setOffsetFromTop((kMatrixHeight/2) - 5);
+	scrollingLayer1.start("PictureThis", -1);
+
     timer.every(250, Blink);
+	timer.every(kTimeout, ResetPushed);
 }
 
 
@@ -412,55 +477,56 @@ void setup()
 /*****************************************************************************/
 void loop() {
     timer.tick();
-    
+	timeout.tick();
+    bool pushed = false;
+
     /**************************************/
     /*            Button Polling          */
     /**************************************/
     if (btn_white.update() && btn_white.fallingEdge()) {
+		pushed = true;
         current_color = kWhite;
     }
     else if (btn_red.update() && btn_red.fallingEdge()) {
+		pushed = true;
         current_color = kRed;
     }
     else if (btn_green.update() && btn_green.fallingEdge()) {
+		pushed = true;
         current_color = kGreen;
     }
     else if (btn_blue.update() && btn_blue.fallingEdge()) {
+		pushed = true;
         current_color = kBlue;
     }
     else if (btn_yellow.update() && btn_yellow.fallingEdge()) {
+		pushed = true;
         current_color = kYellow;
     }
     else if (btn_orange.update() && btn_orange.fallingEdge()) {
+		pushed = true;
         current_color = kOrange;
     }
     else if (btn_purple.update() && btn_purple.fallingEdge()) {
+		pushed = true;
         current_color = kPurple;
     }
     else if (btn_erase.update() && btn_erase.fallingEdge()) {
+		pushed = true;
         current_color = kClear;
     }
 
     if (btn_draw.update() && btn_draw.fallingEdge()) {
+		pushed = true;
         drawing = !drawing;
     }
     
     if (btn_reset.update() && btn_reset.fallingEdge()) {
-        backgroundLayer.fillScreen(kClear);
-        backgroundLayer.swapBuffers();
-
-        drawing = false;
-
-        cursor.r = 1;
-        cursor.x = kCenterX;
-        cursor.y = kCenterY;
-
-        RecordLast();
-        InitDots();
-
+        ResetPushed();
     }
 
     if (btn_cursor.update() && btn_cursor.fallingEdge()) {
+		pushed = true;
         timer.cancel();
 
         // Make sure cursor is NOT drawn before changing size
@@ -520,6 +586,15 @@ void loop() {
     /**************************************/
     /*               Drawing              */
     /**************************************/
+	if (moved || pushed) {
+		if (title_screen_on) {
+			title_screen_on = false;
+			scrollingLayer1.stop();
+		}
+		timeout.cancel();
+		timeout.every(kTimeout, ResetPushed);
+	}
+
     struct rgb24 draw_color = (SameColor(current_color, kClear)) ? kClearBlink : current_color;
     if (moved && drawing) {
         SetDot(cursor.r, cursor.x, cursor.y, current_color);
