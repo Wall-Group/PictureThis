@@ -515,8 +515,11 @@ void loop() {
         // Blink();
         timer.every(250, Blink);
     }
-
-    /// Anytime we move, we want to reset all the pixels that the cursor was over
-    /// to their previous values if we're not drawing
-
+    else if (drawing){
+        SetDot(cursor.r, cursor.x, cursor.y, current_color);
+        // ResetPrevious();
+        backgroundLayer.fillCircle(
+                    cursor.x, cursor.y, cursor.r, draw_color);
+        backgroundLayer.swapBuffers();        
+    }
 }
